@@ -11,7 +11,7 @@ Sort Github fork lists by the number of stars and commits ahead from the source 
 ## Installation
 1. If you don't already have an userscript manager, we suggest Tampermonkey. [[Chrome]](https://chrome.google.com/webstore/detail/dhdgffkkebhmkfjojejmpbldmpobfkfo) [[Firefox]](https://addons.mozilla.org/en-US/firefox/addon/tampermonkey/) [[Others]](https://www.tampermonkey.net/)
 1. Click here -> [[Install meaningful-forks]](https://github.com/jtagcat/meaningful-forks/raw/master/dist/script.user.js)
-1. (optional) Get a [Github API token](https://github.com/settings/tokens/new) with `public_repo` permission (or also for private repos, the `repo` permission).<br>Edit meaningful-forks locally (Tampermonkey > meaningful-forks > edit) and paste the key where asked: `!async function(){const e="replacethistextwithyourkey"`. Afterwards save.
+1. (optional) All keys are [rate limited](https://developer.github.com/v3/#rate-limiting). Get your own [Github API token](https://github.com/settings/tokens/new) with `public_repo` permission (or also for private repos, the `repo` permission).<br>Edit meaningful-forks locally (Tampermonkey > meaningful-forks > edit) and paste the key where asked: `!async function(){const e="replacethistextwithyourkey"`. Afterwards save.
 
 To test meaningful-forks, you can visit the [fork page for github/gitignore](https://github.com/github/gitignore/network/members).
 
