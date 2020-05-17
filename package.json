@@ -1,6 +1,6 @@
 {
   "name": "meaningful-forks",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "Sort forks by number of stars and number of commits ahead",
   "main": "dist/script.user.js",
   "scripts": {
