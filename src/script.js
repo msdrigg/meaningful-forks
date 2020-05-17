@@ -30,11 +30,23 @@
     const forkApiUrl = `https://api.github.com/repos/${sourceRepoName}/forks?sort=stargazers`;
     console.log("TCL: forkApiUrl", forkApiUrl)
     let data = await fetch(forkApiUrl, auth);
-    const forks = await data.json();
+    let main_forks = await data.json();
+    let sub_forks = {};
     // console.log("TCL: forks", forks.filter(fork => fork.owner.type === "Organization"));
-    forks.forEach(fork => {
-        console.log(fork.full_name + ", ");
-    })
+    await Promise.all(main_forks.map(async (fork) => {
+        console.log(fork.full_name + ", subforks:", fork.forks);
+        if (fork.forks > 0) {
+            let subfork_data = await fetch(fork.forks_url + '?sort=stargazers', auth);
+            let temp_sub_forks = await subfork_data.json();
+            temp_sub_forks.forEach(sf => {
+                sf.is_subfork = true;
+                sf.forked_from = fork.full_name;
+            });
+            sub_forks = sub_forks.length > 0 ? sub_forks.concat(temp_sub_forks) : temp_sub_forks;
+        }
+    }));
+    console.log(`Found ${sub_forks.length} subforks`);
+    const forks = main_forks.concat(sub_forks);
     console.log("TCL: forks.length: " + forks.length);
     const stargazerCheckPromises = [];
     forks.forEach((fork, index, forks) => {
@@ -204,6 +216,9 @@
             }
             if (fork["ahead_by"] - fork["behind_by"] > 0) {
                 repoDocumentFragment.appendChild(createIconSVG("flame"));
+            }
+            if (fork.is_subfork) {
+                repoDocumentFragment.appendChild(document.createTextNode(`(forked from ${fork.forked_from})`));
             }
             repo.appendChild(repoDocumentFragment);
             network.firstElementChild.insertAdjacentElement("afterend", repo);
