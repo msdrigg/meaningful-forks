@@ -50,16 +50,23 @@
         }
     }));
     console.log(`Found ${sub_forks.length} subforks`);
-    const forks = main_forks.concat(sub_forks);
+    let forks = main_forks.concat(sub_forks);
     console.log("TCL: forks.length: " + forks.length);
     const stargazerCheckPromises = [];
-    forks.forEach((fork, index, forks) => {
+    let bad_forks = [];
+    await Promise.all(forks.map(async (fork, index, forks) => {
         // like: mcanthony
+        if (fork.owner === undefined) {
+            console.log('marking bad fork for delete', index, fork);
+            bad_forks.push(index);
+            return;
+        }
         const authorName = fork["owner"]["login"];
-        console.log("TCL: authorName", authorName)
+        console.log("TCL: authorName", authorName, index);
+        if (authorName === 'undefined') { return; } // skip
         const stargazersUrl = fork["stargazers_url"];
         stargazerCheckPromises.push(
-            fetch(stargazersUrl, auth).then(data => {
+            await fetch(stargazersUrl, auth).then(data => {
                 if (data.ok) {
                     return data.json();
                 }
@@ -75,10 +82,15 @@
                     }
                 });
             }).catch(function (error) {
-                console.log('There has been a problem with your fetch operation: ', error.message);
+                console.log('There has been a problem with your fetch operation: ', error.message, fork);
+                bad_forks.push(index);
             })
         );
-    });
+    }));
+    console.log(`found ${bad_forks.length} forks with bad data out of ${forks.length}`, bad_forks);
+    if (bad_forks.length > 0) {
+        bad_forks = remove_bad_forks(bad_forks);
+    }
 
     await Promise.all(stargazerCheckPromises);
     forks.sort(sortBy('stargazers_count', true, parseInt));
@@ -103,9 +115,20 @@
         } catch (error) {
             console.log(error);
         }
+        // mark subforks that are not ahead by any commits for delete
+        // console.log(fork, fork.is_subfork, fork.ahead_by);
+        if (fork.is_subfork && fork["ahead_by"] === 0) {
+            console.log('marking subfork ahead_by 0 for delete', index, fork.full_name);
+            bad_forks.push(index);
+            return;
+        }
     });
 
-    console.log("TCL: forks", forks);
+    console.log(`found ${bad_forks.length} subforks ahead_by 0 out of ${forks.length}`, bad_forks);
+    if (bad_forks.length > 0) {
+        bad_forks = remove_bad_forks(bad_forks);
+    }
+    // console.log("TCL: forks", forks);
 
     forks.sort(sortByMultipleFields({
         name: "stargazers_count",
@@ -123,28 +146,36 @@
 
     console.log("Beginning of DOM operations!");
     forks.reverse().forEach(fork => {
-        // console.log("TCL: fork", fork)
+        console.log("TCL: fork", fork)
+        // if (fork.owner.login === 'undefined') { return; }
         const forkName = fork["full_name"]; // like: mcanthony/lovely-forks
         const starCount = fork["stargazers_count"];
-        let hasRepo = false; // the repo is listed as a fork or not
-        network.querySelectorAll("div.repo").forEach((repo) => {
+        console.log(forkName, starCount);
+        let hasRepo = false; // the repo is listed on the current page
+        let repos = network.querySelectorAll("div.repo");
+        for (let i = 0; i < repos.length; i++) {
             // like: mcanthony/lovely-forks, remove the first "/" in url by substring(1) in repoName
-            const href = repo.lastElementChild.getAttribute("href");
+            const href = repos[i].lastElementChild.getAttribute("href");
             if (href) {
                 const repoName = href.substring(1);
+                console.log(href, repoName, forkName, i);
                 if (repoName === forkName) {
                     hasRepo = true;
-                    if (fork.is_subfork) {
+                    if (fork.hasOwnProperty('is_subfork') && fork.is_subfork) {
+                        console.log('adding dagger to subfork');
                         // the normal L won't make sense because subforks are ranked at the same level now
                         const dagger = document.createTextNode('\u2021')
-                        repo.querySelectorAll('img[src$="l.png"]')[0].replaceWith(dagger);
+                        repos[i].querySelectorAll('img[src$="l.png"]')[0].replaceWith(dagger);
                     }
-                    addStatus(repo);
+                    addStatus(repos[i]);
+                    break; // no need to keep searching after we found it
                 }
             }
-        });
+        };
+        // if api returned a user whose repo is not displayed on the current page
+        // max seems to be 1000 displayed repos
         if (!hasRepo) {
-            console.log('!hasrepo', repo); // not sure if/when this happens
+            console.log(`${forkName} repo wasn't showing`);
             // create repo display
             //<div class="repo">
             //  <img alt="" class="network-tree" src="https://github.githubassets.com/images/modules/network/t.png">
@@ -216,6 +247,7 @@
         loading.remove();
 
         function addStatus(repo) {
+            console.log('adding status', repo);
             const repoDocumentFragment = document.createDocumentFragment();
             repoDocumentFragment.appendChild(createIconSVG("star"));
             repoDocumentFragment.appendChild(document.createTextNode(starCount + " "));
@@ -233,7 +265,9 @@
             repo.appendChild(repoDocumentFragment);
             network.firstElementChild.insertAdjacentElement("afterend", repo);
         }
-        console.log("TCL: starCount", fork["stargazers_count"]);
+        if (fork.hasOwnProperty('stargazers_count')) {
+            console.log("TCL: starCount", fork["stargazers_count"]);            
+        }
     });
 
     async function getFromApi(url, properties) {
@@ -371,6 +405,16 @@
             promises.push(callback(array[index], index, array));
         }
         return Promise.all(promises);
+    }
+
+    function remove_bad_forks(indexes) {
+        for (let i = 0; i < indexes.length; i++) {
+            console.log('deleting:', forks[indexes[i]]);
+            delete forks[indexes[i]];
+        }
+        forks = forks.filter(el => { return el !== undefined });
+        console.log(`${forks.length} remaining forks`);
+        return [];
     }
 
 })()
