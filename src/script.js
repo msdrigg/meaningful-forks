@@ -1,16 +1,11 @@
-// ==UserScript==
-//@name          meaningful-forks
-// @namespace    http://tampermonkey.net/
-// @version      0.1
-// @description  Sort Github fork lists by the number of stars and commits ahead from the source repo.
-// @author       Kevin Li
-// @match        https://github.com/*/network/members
-// @grant        none
-// ==/UserScript==
-
 (async function () {
     // NOTE: Do NOT release key with source
-    const accessToken = "f9765ac063fb541c632e7baec5bc91f0db0738dc"
+    const accessToken = "<YOUR ACCESS TOKEN>";
+
+    // Authorization header
+    let headerObj = new Headers();
+    headerObj.append('Authorization', 'token ' + accessToken);
+    const auth = {headers: headerObj};
     
     // Show loading gif while sorting forks
     const loading = document.createElement("span");
@@ -41,7 +36,7 @@
     // like: https://api.github.com/repos/GhettoSanta/lovely-forks/forks?sort=stargazers
     const forkApiUrl = processUrl(`https://api.github.com/repos/${sourceRepoName}/forks?sort=stargazers`);
     console.log("TCL: forkApiUrl", forkApiUrl)
-    let data = await fetch(forkApiUrl);
+    let data = await fetch(forkApiUrl, auth);
     const forks = await data.json();
     // console.log("TCL: forks", forks.filter(fork => fork.owner.type === "Organization"));
     forks.forEach(fork => {
@@ -55,7 +50,7 @@
         console.log("TCL: authorName", authorName)
         const stargazersUrl = processUrl(fork["stargazers_url"]);
         stargazerCheckPromises.push(
-            fetch(stargazersUrl).then(data => {
+            fetch(stargazersUrl, auth).then(data => {
                 if (data.ok) {
                     return data.json();
                 }
@@ -225,7 +220,7 @@
 
     async function getFromApi(url, properties) {
         let json;
-        let data = await fetch(url);
+        let data = await fetch(url, auth);
         if (data.ok) {
             json = await data.json();
         } else {
