@@ -33,6 +33,10 @@
     let main_forks = await data.json();
     let sub_forks = {};
     // console.log("TCL: forks", forks.filter(fork => fork.owner.type === "Organization"));
+
+    // subrepos (forks of forks) get out of order if not included in the ranking
+    // aside from not displaying the amount of stars or commits
+    // so now they are being included, but only one level deep to save time
     await Promise.all(main_forks.map(async (fork) => {
         console.log(fork.full_name + ", subforks:", fork.forks);
         if (fork.forks > 0) {
@@ -130,11 +134,17 @@
                 const repoName = href.substring(1);
                 if (repoName === forkName) {
                     hasRepo = true;
+                    if (fork.is_subfork) {
+                        // the normal L won't make sense because subforks are ranked at the same level now
+                        const dagger = document.createTextNode('\u2021')
+                        repo.querySelectorAll('img[src$="l.png"]')[0].replaceWith(dagger);
+                    }
                     addStatus(repo);
                 }
             }
         });
         if (!hasRepo) {
+            console.log('!hasrepo', repo); // not sure if/when this happens
             // create repo display
             //<div class="repo">
             //  <img alt="" class="network-tree" src="https://github.githubassets.com/images/modules/network/t.png">
@@ -218,7 +228,7 @@
                 repoDocumentFragment.appendChild(createIconSVG("flame"));
             }
             if (fork.is_subfork) {
-                repoDocumentFragment.appendChild(document.createTextNode(`(forked from ${fork.forked_from})`));
+                repoDocumentFragment.appendChild(document.createTextNode(` (subfork of ${fork.forked_from})`));
             }
             repo.appendChild(repoDocumentFragment);
             network.firstElementChild.insertAdjacentElement("afterend", repo);
