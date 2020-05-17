@@ -20,13 +20,6 @@
     loading.style.top = "calc(50% - 20px)";
     document.body.appendChild(loading);
 
-    function processUrl(url) {
-        if (url.indexOf("?") < 0) {
-            return `${url}?access_token=${accessToken}`;
-        } else {
-            return `${url}&access_token=${accessToken}`;
-        }
-    }
     const network = document.querySelector("#network");
 
     // like: musically-ut/lovely-forks
@@ -34,7 +27,7 @@
     console.log("TCL: currentRepoUrl", sourceRepoName);
     const sourceAuthorName = sourceRepoName.substring(0, sourceRepoName.lastIndexOf("/"));
     // like: https://api.github.com/repos/GhettoSanta/lovely-forks/forks?sort=stargazers
-    const forkApiUrl = processUrl(`https://api.github.com/repos/${sourceRepoName}/forks?sort=stargazers`);
+    const forkApiUrl = `https://api.github.com/repos/${sourceRepoName}/forks?sort=stargazers`;
     console.log("TCL: forkApiUrl", forkApiUrl)
     let data = await fetch(forkApiUrl, auth);
     const forks = await data.json();
@@ -48,7 +41,7 @@
         // like: mcanthony
         const authorName = fork["owner"]["login"];
         console.log("TCL: authorName", authorName)
-        const stargazersUrl = processUrl(fork["stargazers_url"]);
+        const stargazersUrl = fork["stargazers_url"];
         stargazerCheckPromises.push(
             fetch(stargazersUrl, auth).then(data => {
                 if (data.ok) {
@@ -86,7 +79,7 @@
             // Get default branch for current fork
             let forkDefaultBranch = await getDefaultBranch(forkName);
 
-            const branchCompareUrl = processUrl(`https://api.github.com/repos/${forkName}/compare/${sourceAuthorName}:${sourceDefaultBranch}...${forkAuthorName}:${forkDefaultBranch}`);
+            const branchCompareUrl = `https://api.github.com/repos/${forkName}/compare/${sourceAuthorName}:${sourceDefaultBranch}...${forkAuthorName}:${forkDefaultBranch}`;
 
             let [aheadBy, behindBy] = await getFromApi(branchCompareUrl, ["ahead_by", "behind_by"]);
             forks[index]["ahead_by"] = aheadBy;
@@ -249,7 +242,7 @@
     }
 
     async function getDefaultBranch(repoName) {
-        const defaultBranchUrl = processUrl(`https://api.github.com/repos/${repoName}`);
+        const defaultBranchUrl = `https://api.github.com/repos/${repoName}`;
         return getFromApi(defaultBranchUrl, "default_branch");
     }
 
