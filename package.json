@@ -1,8 +1,8 @@
 {
   "name": "meaningful-forks",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Sort forks by number of stars and number of commits ahead",
-  "main": "dist/script.js",
+  "main": "dist/script.user.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -12,11 +12,16 @@
     "sort",
     "star"
   ],
-  "author": "Kevin Li <kevinli020508@gmail.com> (https://github.com/AlienKevin)",
+  "author": "Kevin Li <kevinli020508@gmail.com> (https://github.com/AlienKevin) + community",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/aflowofcode/meaningful-forks.git"
+  },
   "devDependencies": {
     "del": "^4.1.0",
     "gulp": "^4.0.0",
+    "gulp-concat": "^2.6.1",
     "gulp-sourcemaps": "^2.6.5",
     "gulp-uglify": "^3.0.2",
     "pump": "^3.0.0",
