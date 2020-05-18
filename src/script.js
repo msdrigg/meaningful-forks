@@ -28,24 +28,33 @@
     const sourceAuthorName = sourceRepoName.substring(0, sourceRepoName.lastIndexOf("/"));
     // like: https://api.github.com/repos/GhettoSanta/lovely-forks/forks?sort=stargazers
     const forkApiUrl = `https://api.github.com/repos/${sourceRepoName}/forks?sort=stargazers`;
-    console.log("TCL: forkApiUrl", forkApiUrl)
-    try {
-        let data = await fetch(forkApiUrl, auth);
-    } catch (e) {
-        // this happens for unknown reasons on this particular repo, github either purposefully or accidentally doesn't allow it
-        // Access to fetch at 'https://api.github.com/repos/github/gitignore/forks?sort=stargazers' from origin 'https://github.com' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. If an opaque response serves your needs, set the request's mode to 'no-cors' to fetch the resource with CORS disabled.
-        console.log('Failed to get the api url, exiting', e);
-        loading.innerText = "Problem accessing API. If this always happens here, this repo probably doesn't allow API access 😕"
-        await setTimeout(()=>{
-            loading.remove();
-        }, 7500);
-    }
-    let main_forks = await data.json(); // if error is caught above, data will not be defined & will kill script
+    console.log("TCL: forkApiUrl", forkApiUrl); 
+    let main_forks = await fetch(forkApiUrl, auth)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`Failed to get the api url, exiting with status: ${response.status}`);                    
+            } else {
+                return response.json();
+            }
+        })
+        .then(responseJson => {
+            return responseJson;
+        })
+        .catch(error =>{
+            // this happens for unknown reasons on this particular repo, github either purposefully or accidentally doesn't allow it
+            // Access to fetch at 'https://api.github.com/repos/github/gitignore/forks?sort=stargazers' from origin 'https://github.com' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. If an opaque response serves your needs, set the request's mode to 'no-cors' to fetch the resource with CORS disabled. 
+            // Sending mode: 'no-cors' along with auth header leads to all requests failing with response.status as 0
+            console.log(error);
+            loading.innerText = "Problem accessing API. If this always happens here, this repo probably doesn't allow API access 😕"
+            setTimeout(()=>{
+                loading.remove();
+            }, 7500);
+        });
     let sub_forks = {};
     // console.log("TCL: forks", forks.filter(fork => fork.owner.type === "Organization"));
 
     // subrepos (forks of forks) get out of order if not included in the ranking
-    // aside from not displaying the amount of stars or commits
+    // aside from not displaying the amount of stars or commits which could be relevant
     // so now they are being included, but only one level deep to save time
     await Promise.all(main_forks.map(async (fork) => {
         console.log(fork.full_name + ", subforks:", fork.forks);
