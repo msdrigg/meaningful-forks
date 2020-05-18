@@ -123,17 +123,18 @@
     forks.sort(sortBy('stargazers_count', true, parseInt));
     console.log("End of modifying stargazer count!");
     loading.innerText = statusText03;
+    // Get default branch of parent repo (where the current fork is forked from)
+    // like: https://api.github.com/repos/GhettoSanta/lovely-forks
+    // this only needs to be done once
+    let sourceDefaultBranch = await getDefaultBranch(sourceRepoName);
     await asyncForEach(forks, async (fork, index, forks) => {
         try {
             const forkAuthorName = fork["owner"]["login"];
             const forkName = fork["full_name"]; // like: mcanthony/lovely-forks
-            // Get defautl branch of parent repo (where the current fork is forked from)
-            // like: https://api.github.com/repos/GhettoSanta/lovely-forks
-            let sourceDefaultBranch = await getDefaultBranch(sourceRepoName);
-
             // Get default branch for current fork
-            let forkDefaultBranch = await getDefaultBranch(forkName);
-
+            // let forkDefaultBranch = await getDefaultBranch(forkName);
+            // we already have this info
+            const forkDefaultBranch = fork.default_branch;
             const branchCompareUrl = `https://api.github.com/repos/${forkName}/compare/${sourceAuthorName}:${sourceDefaultBranch}...${forkAuthorName}:${forkDefaultBranch}`;
 
             let [aheadBy, behindBy] = await getFromApi(branchCompareUrl, ["ahead_by", "behind_by"]);
@@ -156,7 +157,8 @@
         bad_forks = remove_bad_forks(bad_forks);
     }
     // console.log("TCL: forks", forks);
-
+    // this part appears to happen so fast the status doesn't get updated..
+    loading.innerText = statusText04;
     forks.sort(sortByMultipleFields({
         name: "stargazers_count",
         primer: parseInt,
@@ -172,13 +174,12 @@
     }));
 
     console.log("Beginning of DOM operations!");
-    loading.innerText = statusText04;
     forks.reverse().forEach(fork => {
-        console.log("TCL: fork", fork)
+        console.log("TCL: fork", fork);
         // if (fork.owner.login === 'undefined') { return; }
         const forkName = fork["full_name"]; // like: mcanthony/lovely-forks
         const starCount = fork["stargazers_count"];
-        console.log(forkName, starCount);
+        // console.log(forkName, starCount);
         let hasRepo = false; // the repo is listed on the current page
         let repos = network.querySelectorAll("div.repo");
         for (let i = 0; i < repos.length; i++) {
@@ -186,7 +187,7 @@
             const href = repos[i].lastElementChild.getAttribute("href");
             if (href) {
                 const repoName = href.substring(1);
-                console.log(href, repoName, forkName, i);
+                // console.log(href, repoName, forkName, i);
                 if (repoName === forkName) {
                     hasRepo = true;
                     if (fork.hasOwnProperty('is_subfork') && fork.is_subfork) {
@@ -270,10 +271,6 @@
             addStatus(repo);
         }
 
-        // Finished sorting
-        // remove loading gif
-        loading.remove();
-
         function addStatus(repo) {
             console.log('adding status', repo);
             const repoDocumentFragment = document.createDocumentFragment();
@@ -297,6 +294,11 @@
             console.log("TCL: starCount", fork["stargazers_count"]);            
         }
     });
+
+    // Finished sorting
+    // remove loading gif
+    console.log("finished sorting");
+    loading.remove();
 
     async function getFromApi(url, properties) {
         let json;
