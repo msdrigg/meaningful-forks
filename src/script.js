@@ -9,7 +9,11 @@
     
     // Show loading gif while sorting forks
     const loading = document.createElement("span");
-    loading.innerText = "Sorting 🍴forks...";
+    const statusText01 = "Gathering 📊data...";
+    const statusText02 = "Updating ✨stars...";
+    const statusText03 = "Sorting 🍴forks (might take a sec)...";
+    const statusText04 = "Rearranging 🔀order...";
+    loading.innerText = statusText01;
     loading.style.position = "fixed";
     loading.style.background = "#22f922";
     loading.style.padding = "10px";
@@ -76,6 +80,7 @@
     console.log("TCL: forks.length: " + forks.length);
     const stargazerCheckPromises = [];
     let bad_forks = [];
+    loading.innerText = statusText02;
     await Promise.all(forks.map(async (fork, index, forks) => {
         // like: mcanthony
         if (fork.owner === undefined) {
@@ -117,7 +122,7 @@
     await Promise.all(stargazerCheckPromises);
     forks.sort(sortBy('stargazers_count', true, parseInt));
     console.log("End of modifying stargazer count!");
-
+    loading.innerText = statusText03;
     await asyncForEach(forks, async (fork, index, forks) => {
         try {
             const forkAuthorName = fork["owner"]["login"];
@@ -167,6 +172,7 @@
     }));
 
     console.log("Beginning of DOM operations!");
+    loading.innerText = statusText04;
     forks.reverse().forEach(fork => {
         console.log("TCL: fork", fork)
         // if (fork.owner.login === 'undefined') { return; }
