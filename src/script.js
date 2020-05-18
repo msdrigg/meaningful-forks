@@ -50,25 +50,28 @@
                 loading.remove();
             }, 7500);
         });
-    let sub_forks = {};
+    let sub_forks = [];
     // console.log("TCL: forks", forks.filter(fork => fork.owner.type === "Organization"));
 
     // subrepos (forks of forks) get out of order if not included in the ranking
     // aside from not displaying the amount of stars or commits which could be relevant
     // so now they are being included, but only one level deep to save time
     await Promise.all(main_forks.map(async (fork) => {
-        console.log(fork.full_name + ", subforks:", fork.forks);
         if (fork.forks > 0) {
+            console.log(`${fork.full_name} has ${fork.forks} subforks`);
             let subfork_data = await fetch(fork.forks_url + '?sort=stargazers', auth);
             let temp_sub_forks = await subfork_data.json();
             temp_sub_forks.forEach(sf => {
-                sf.is_subfork = true;
-                sf.forked_from = fork.full_name;
+                // make sure the subforks have actually done something
+                if (sf.pushed_at !== fork.pushed_at) {
+                    sf.is_subfork = true;
+                    sf.forked_from = fork.full_name;
+                    sub_forks = sub_forks.concat(sf);
+                }                  
             });
-            sub_forks = sub_forks.length > 0 ? sub_forks.concat(temp_sub_forks) : temp_sub_forks;
         }
     }));
-    console.log(`Found ${sub_forks.length} subforks`);
+    console.log(`Found ${sub_forks.length} relevant subforks`, sub_forks);
     let forks = main_forks.concat(sub_forks);
     console.log("TCL: forks.length: " + forks.length);
     const stargazerCheckPromises = [];
