@@ -29,8 +29,18 @@
     // like: https://api.github.com/repos/GhettoSanta/lovely-forks/forks?sort=stargazers
     const forkApiUrl = `https://api.github.com/repos/${sourceRepoName}/forks?sort=stargazers`;
     console.log("TCL: forkApiUrl", forkApiUrl)
-    let data = await fetch(forkApiUrl, auth);
-    let main_forks = await data.json();
+    try {
+        let data = await fetch(forkApiUrl, auth);
+    } catch (e) {
+        // this happens for unknown reasons on this particular repo, github either purposefully or accidentally doesn't allow it
+        // Access to fetch at 'https://api.github.com/repos/github/gitignore/forks?sort=stargazers' from origin 'https://github.com' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. If an opaque response serves your needs, set the request's mode to 'no-cors' to fetch the resource with CORS disabled.
+        console.log('Failed to get the api url, exiting', e);
+        loading.innerText = "Problem accessing API. If this always happens here, this repo probably doesn't allow API access 😕"
+        await setTimeout(()=>{
+            loading.remove();
+        }, 7500);
+    }
+    let main_forks = await data.json(); // if error is caught above, data will not be defined & will kill script
     let sub_forks = {};
     // console.log("TCL: forks", forks.filter(fork => fork.owner.type === "Organization"));
 
