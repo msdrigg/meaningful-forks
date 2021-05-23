@@ -53,7 +53,7 @@
             // Access to fetch at 'https://api.github.com/repos/github/gitignore/forks?sort=stargazers' from origin 'https://github.com' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. If an opaque response serves your needs, set the request's mode to 'no-cors' to fetch the resource with CORS disabled. 
             // Sending mode: 'no-cors' along with auth header leads to all requests failing with response.status as 0
             console.log(error);
-            loading.innerText = "Problem accessing API. If this always happens here, this repo probably doesn't allow API access 😕"
+            loading.innerText = "Problem accessing API. If you've entered your personal access token & this always happens here, this repo probably doesn't allow API access 😕";
             setTimeout(()=>{
                 loading.remove();
             }, 7500);
