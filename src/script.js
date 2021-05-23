@@ -9,25 +9,29 @@
     
     // Show loading gif while sorting forks
     const loading = document.createElement("span");
-    const statusText01 = "Gathering 📊data...";
-    const statusText02 = "Updating ✨stars...";
-    const statusText03 = "Sorting 🍴forks (might take a sec)...";
-    const statusText04 = "Rearranging 🔀order...";
+    const statusText01 = "📊 Meaningful Forks is gathering data...";
+    const statusText02 = "✨ Updating stars...";
+    const statusText03 = "🍴 Sorting forks (might take a sec)...";
+    const statusText04 = "🔀 Rearranging order...";
     loading.innerText = statusText01;
-    loading.style.position = "fixed";
     loading.style.background = "#22f922";
-    loading.style.padding = "10px";
     loading.style.borderRadius = "10px";
+    loading.style.color = "black";
+    loading.style.fontWeight = "bold";
+    loading.style.padding = "10px";
+    loading.style.width = "max-content";
+    loading.style.height = "calc(20px + 1.5em)"; // pad + line height
     loading.style.zIndex = "9999";
-    // must put whitespace around "-", see here: https://stackoverflow.com/questions/34419813/why-must-a-or-be-surrounded-with-whitespace-from-within-the-calc-method
-    loading.style.left = "calc(50% - 60px)";
-    loading.style.top = "calc(50% - 20px)";
+    loading.style.position = "fixed";
+    loading.style.inset = "0";
+    loading.style.margin = "auto";
     document.body.appendChild(loading);
 
     const network = document.querySelector("#network");
 
     // like: musically-ut/lovely-forks
-    const sourceRepoName = network.querySelector("span.current-repository").lastElementChild.getAttribute("href").substring(1);
+    // the first/top line should be the original repo (github no longer labels it specifically)
+    const sourceRepoName = network.querySelectorAll(".repo")[0].lastElementChild.getAttribute("href").substring(1);
     console.log("TCL: currentRepoUrl", sourceRepoName);
     const sourceAuthorName = sourceRepoName.substring(0, sourceRepoName.lastIndexOf("/"));
     // like: https://api.github.com/repos/GhettoSanta/lovely-forks/forks?sort=stargazers
@@ -54,7 +58,8 @@
                 loading.remove();
             }, 7500);
         });
-    let sub_forks = [];
+    let sub_forks = [],
+        useless_sub_forks = [];
     // console.log("TCL: forks", forks.filter(fork => fork.owner.type === "Organization"));
 
     // subrepos (forks of forks) get out of order if not included in the ranking
@@ -65,13 +70,18 @@
             console.log(`${fork.full_name} has ${fork.forks} subforks`);
             let subfork_data = await fetch(fork.forks_url + '?sort=stargazers', auth);
             let temp_sub_forks = await subfork_data.json();
+
             temp_sub_forks.forEach(sf => {
                 // make sure the subforks have actually done something
                 if (sf.pushed_at !== fork.pushed_at) {
                     sf.is_subfork = true;
                     sf.forked_from = fork.full_name;
                     sub_forks = sub_forks.concat(sf);
-                }                  
+                } else {
+                    // TODO: remove these from the DOM or label them @ bottom
+                    // console.log('irrelevant subfork', sf);
+                    useless_sub_forks.push(sf);
+                }               
             });
         }
     }));
@@ -181,7 +191,8 @@
         const starCount = fork["stargazers_count"];
         // console.log(forkName, starCount);
         let hasRepo = false; // the repo is listed on the current page
-        let repos = network.querySelectorAll("div.repo");
+        const repos = network.querySelectorAll("div.repo"),
+              tree_svg = repos.length > 2 ? repos[1].querySelector('svg') : undefined;
         for (let i = 0; i < repos.length; i++) {
             // like: mcanthony/lovely-forks, remove the first "/" in url by substring(1) in repoName
             const href = repos[i].lastElementChild.getAttribute("href");
@@ -193,8 +204,10 @@
                     if (fork.hasOwnProperty('is_subfork') && fork.is_subfork) {
                         console.log('adding dagger to subfork');
                         // the normal L won't make sense because subforks are ranked at the same level now
-                        const dagger = document.createTextNode('\u2021')
-                        repos[i].querySelectorAll('img[src$="l.png"]')[0].replaceWith(dagger);
+                        const dagger = document.createTextNode('\u2021'),
+                              svgs = repos[i].querySelectorAll('svg');
+                        if (tree_svg) svgs[0].replaceWith(tree_svg.cloneNode(true));
+                        svgs[1].replaceWith(dagger);
                     }
                     addStatus(repos[i]);
                     break; // no need to keep searching after we found it
@@ -215,12 +228,6 @@
             //</div>
             const repo = document.createElement("div");
             repo.classList.add("repo");
-
-            // like: <img alt="" class="network-tree" src="https://github.githubassets.com/images/modules/network/t.png">
-            const treeImg = document.createElement("img");
-            treeImg.alt = "";
-            treeImg.classList.add("network-tree");
-            treeImg.src = "https://github.githubassets.com/images/modules/network/t.png";
 
             // like: <a data-hovercard-type="organization" data-hovercard-url="/orgs/19dev/hovercard" href="/19dev">19dev</a>
             const ownerType = fork["owner"]["type"].toLowerCase();
@@ -262,7 +269,7 @@
             repoAnchor.innerText = fork["name"];
 
             // Putting parts all together
-            repo.appendChild(treeImg);
+            repo.appendChild(tree_svg.cloneNode(true));
             repo.appendChild(gravatarAnchor);
             repo.appendChild(nameAnchor);
             repo.appendChild(document.createTextNode(" / "));
@@ -447,4 +454,4 @@
         return [];
     }
 
-})()
+})();
