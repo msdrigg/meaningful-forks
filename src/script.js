@@ -1,6 +1,8 @@
 (async function () {
   // NOTE: Do NOT release key with source
   const accessToken = "<YOUR ACCESS TOKEN>";
+  // Number of forks to query
+  const apiForkQueryCount = 50;
 
   // Authorization header
   let headerObj = new Headers();
@@ -40,8 +42,8 @@
     0,
     sourceRepoName.lastIndexOf("/")
   );
-  // like: https://api.github.com/repos/GhettoSanta/lovely-forks/forks?sort=stargazers
-  const forkApiUrl = `https://api.github.com/repos/${sourceRepoName}/forks?sort=stargazers`;
+  // like: https://api.github.com/repos/GhettoSanta/lovely-forks/forks?sort=stargazers&per_page=${apiForkQueryCount}
+  const forkApiUrl = `https://api.github.com/repos/${sourceRepoName}/forks?sort=stargazers&per_page=${apiForkQueryCount}`;
   console.log("TCL: forkApiUrl", forkApiUrl);
   let main_forks = await fetch(forkApiUrl, auth)
     .then((response) => {
@@ -58,7 +60,7 @@
     })
     .catch((error) => {
       // this happens for unknown reasons on this particular repo, github either purposefully or accidentally doesn't allow it
-      // Access to fetch at 'https://api.github.com/repos/github/gitignore/forks?sort=stargazers' from origin 'https://github.com' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. If an opaque response serves your needs, set the request's mode to 'no-cors' to fetch the resource with CORS disabled.
+      // Access to fetch at 'https://api.github.com/repos/github/gitignore/forks?sort=stargazers&per_page=${apiForkQueryCount}' from origin 'https://github.com' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. If an opaque response serves your needs, set the request's mode to 'no-cors' to fetch the resource with CORS disabled.
       // Sending mode: 'no-cors' along with auth header leads to all requests failing with response.status as 0
       console.log(error);
       loading.innerText =
@@ -79,7 +81,7 @@
       if (fork.forks > 0) {
         console.log(`${fork.full_name} has ${fork.forks} subforks`);
         let subfork_data = await fetch(
-          fork.forks_url + "?sort=stargazers",
+          fork.forks_url + `?sort=stargazers&per_page=${apiForkQueryCount}`,
           auth
         );
         let temp_sub_forks = await subfork_data.json();
