@@ -153,7 +153,6 @@
               error.message,
               fork
             );
-            bad_forks.push(index);
           })
       );
     })
