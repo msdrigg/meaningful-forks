@@ -44,7 +44,7 @@
     document.body.appendChild(loading);
 
     // Make sure footer is always visible even if our loading icon obscures it
-    document.querySelector(".footer").style["margin-bottom"] = "5vh";
+    document.querySelector(".footer").style["margin-bottom"] = "10vh";
 
     const network = document.querySelector("#network");
 
@@ -85,6 +85,46 @@
         setTimeout(() => {
           loading.remove();
         }, 7500);
+      });
+    let main_forks_user_map = {};
+    main_forks.forEach((item) => {
+      main_forks_user_map[item.full_name] = item;
+    });
+
+    let oneoffAuth = {
+      headers: {
+        Authorization: "token " + ACCESS_TOKEN,
+        Accept: "application/json",
+      },
+    };
+    await fetch(`https://github.com/${sourceRepoName}/network/meta`, oneoffAuth)
+      .then((data) => {
+        return data.json();
+      })
+      .then((json) => {
+        if (DEBUG_LEVEL < 2) console.log(JSON.stringify(json, null, 4));
+        Promise.all(
+          json.users.map(async (user) => {
+            let full_name = `${user.name}/${user.repo}`;
+            if (!(full_name in main_forks_user_map)) {
+              await fetch(`https://api.github.com/repos/${full_name}`, auth)
+                .then((data) => data.json())
+                .then((userJson) => {
+                  main_forks.push(userJson);
+                })
+                .catch((err) => {
+                  if (DEBUG_LEVEL < 5)
+                    console.error("Error getting recently updated user: ");
+                  if (DEBUG_LEVEL < 5) console.log(err);
+                });
+            }
+          })
+        );
+      })
+      .catch((err) => {
+        if (DEBUG_LEVEL < 5)
+          console.error("Error getting recently updated user: ");
+        if (DEBUG_LEVEL < 5) console.log(err);
       });
     let sub_forks = [],
       useless_sub_forks = [];
