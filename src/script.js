@@ -548,6 +548,14 @@
     and then click on "Forks". This flow does not activate the userscript until 
     the user then reloads the page. With this polling function, the page is loaded 
     automatically without reload.
+
+    selectorText:
+      The selector string that
+      specifies the desired element(s).
+    actionFunction:
+      The code to run when elements are
+      found. It is passed a jNode to the matched
+      element.
 */
   async function waitForKeyElements(selectorTxt, actionFunction) {
     let targetNodes = document.querySelectorAll(selectorTxt);
@@ -576,5 +584,5 @@
       waitForKeyElements(selectorTxt, actionFunction);
     }, 1000);
   }
-  waitForKeyElements("#network>.repo", handleTransitions);
+  await waitForKeyElements("#network>.repo", handleTransitions);
 })();
