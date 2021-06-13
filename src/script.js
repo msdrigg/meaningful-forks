@@ -1,11 +1,10 @@
 (async function () {
-  // NOTE: Do NOT release key with source
   // Using let instead of const so minify-es doesnt get too smart and move it away from the beginning
-  let accessToken = "<YOUR ACCESS TOKEN>";
+  // NOTE: Do NOT release key with source
+  let accessToken = "ENTER_ACCESS_TOKEN_HERE";
+  // Number of forks to query
+  const apiForkQueryCount = 50;
   async function handleTransitions() {
-    // Number of forks to query
-    const apiForkQueryCount = 50;
-
     // Authorization header
     let headerObj = new Headers();
     headerObj.append("Authorization", "token " + accessToken);
