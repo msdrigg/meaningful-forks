@@ -127,3 +127,29 @@ function createRepoDiv (document, repoData) {
 
   addStatus(repoDiv)
 }
+
+function addStatus (repoDiv, repoNode, DEBUG_LEVEL) {
+  if (DEBUG_LEVEL === undefined) {
+    DEBUG_LEVEL = 4
+  }
+  if (DEBUG_LEVEL < 2) console.log('adding status', repoDiv)
+  const iconsDocumentFragment = document.createDocumentFragment()
+  iconsDocumentFragment.appendChild(createIconSVG('star'))
+  iconsDocumentFragment.appendChild(
+    document.createTextNode(`${repoNode.node.starCount} `)
+  )
+  if (repoNode.ahead_by !== undefined && repoNode.behind_by !== undefined) {
+    if (repoNode.ahead_by > 0) {
+      const upIcon = createIconSVG('up')
+      iconsDocumentFragment.appendChild(upIcon)
+      iconsDocumentFragment.appendChild(
+        document.createTextNode(repoNode.ahead_by + ' ')
+      )
+    }
+    if (repoNode.ahead_by - repoNode.behind_by > 0) {
+      iconsDocumentFragment.appendChild(createIconSVG('flame'))
+    }
+  }
+  repoDiv.appendChild(iconsDocumentFragment)
+  network.firstElementChild.insertAdjacentElement('afterend', repoDiv)
+}
