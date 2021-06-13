@@ -184,12 +184,12 @@
         const forkDefaultBranch = fork.default_branch;
         const branchCompareUrl = `https://api.github.com/repos/${forkName}/compare/${sourceAuthorName}:${sourceDefaultBranch}...${forkAuthorName}:${forkDefaultBranch}`;
 
-        let [aheadBy, behindBy] = await getFromApi(branchCompareUrl, [
-          "ahead_by",
-          "behind_by",
-        ]);
-        forks[index]["ahead_by"] = aheadBy;
-        forks[index]["behind_by"] = behindBy;
+        await getFromApi(branchCompareUrl, ["ahead_by", "behind_by"]).then(
+          (aheadBehindTuple) => {
+            forks[index]["ahead_by"] = aheadBehindTuple[0];
+            forks[index]["behind_by"] = aheadBehindTuple[1];
+          }
+        );
       } catch (error) {
         console.log(error);
       }
@@ -346,15 +346,17 @@
         repoDocumentFragment.appendChild(
           document.createTextNode(starCount + " ")
         );
-        if (fork["ahead_by"] > 0) {
-          const upIcon = createIconSVG("up");
-          repoDocumentFragment.appendChild(upIcon);
-          repoDocumentFragment.appendChild(
-            document.createTextNode(fork["ahead_by"] + " ")
-          );
-        }
-        if (fork["ahead_by"] - fork["behind_by"] > 0) {
-          repoDocumentFragment.appendChild(createIconSVG("flame"));
+        if (fork["ahead_by"] !== undefined && fork["behind_by"] !== undefined) {
+          if (fork["ahead_by"] > 0) {
+            const upIcon = createIconSVG("up");
+            repoDocumentFragment.appendChild(upIcon);
+            repoDocumentFragment.appendChild(
+              document.createTextNode(fork["ahead_by"] + " ")
+            );
+          }
+          if (fork["ahead_by"] - fork["behind_by"] > 0) {
+            repoDocumentFragment.appendChild(createIconSVG("flame"));
+          }
         }
         if (fork.is_subfork) {
           repoDocumentFragment.appendChild(
@@ -375,13 +377,12 @@
     loading.remove();
 
     async function getFromApi(url, properties) {
-      let json;
-      let data = await fetch(url, auth);
-      if (data.ok) {
-        json = await data.json();
-      } else {
-        throw new Error("Network response is not OK!");
-      }
+      let json = await fetch(url, auth).then((data) => data.json());
+      // if (data.ok) {
+      //   json = await data.json();
+      // } else {
+      //   throw new Error("Network response is not OK!");
+      // }
       if (typeof properties === "string") {
         return processPropertyChain(json, properties);
       } else if (Array.isArray(properties)) {
@@ -432,7 +433,7 @@
         n_fields = fields.length;
 
       return function (A, B) {
-        var a, b, field, key, primer, highToLow, result, i;
+        var a, b, field, key, highToLow, result, i;
 
         for (i = 0; i < n_fields; i++) {
           result = 0;
