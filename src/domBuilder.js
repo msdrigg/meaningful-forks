@@ -4,7 +4,9 @@ export const STATUS_ICON_TYPES = {
   up: 'up',
   flame: 'flame'
 }
-export const STATUS_ICONS = {}
+
+const STATUS_ICONS = {}
+
 STATUS_ICON_TYPES.forEach((val, key) => {
   const svgNS = 'http://www.w3.org/2000/svg'
   const svg = document.createElementNS(svgNS, 'svg')
@@ -59,14 +61,65 @@ STATUS_ICON_TYPES.forEach((val, key) => {
   STATUS_ICONS[key] = svg
 })
 
-function getStatusIcon (type) {
+export function getStatusIcon (type) {
   return STATUS_ICONS[type].cloneNode(true)
 }
 
-const TREE_ICON_TYPES = {
-
+export const TREE_ICON_TYPES = {
+  end: 'END',
+  branch: 'BRANCH',
+  empty: 'EMPTY',
+  plain: 'PLAIN'
 }
-function getTreeIcon (type) {
+
+const TREE_ICONS = { }
+
+TREE_ICON_TYPES.forEach((type, key) => {
+  // '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="26" viewBox="0 0 20 26"\
+  // fill="var(--color-border-tertiary, #d1d5da)" class="network-tree"/>'
+  const xlmns = 'http://www.w3.org/2000/svg'
+  const baseSvg = document.createElementNS(xlmns, 'svg')
+  baseSvg.setAttribute('height', '26')
+  baseSvg.setAttribute('width', '20')
+  baseSvg.setAttribute('viewBox', '0 0 20 26')
+  baseSvg.setAttribute('fill', 'var(--color-border-tertiary, #d1d5da)')
+  baseSvg.classList.add('network-tree')
+
+  switch (type) {
+    case 'EMPTY':
+      // Change base to this, and add no children
+      // <svg xmlns="http://www.w3.org/2000/svg" width="20" height="26" viewBox="0 0 20 26" class="network-tree"></svg>
+      baseSvg.setAttribute('fill', '')
+      break
+    case 'PLAIN': {
+      // <rect x="9" width="1" height="26"></rect>
+      const rect = document.createElement('rect')
+      rect.setAttribute('x', '9')
+      rect.setAttribute('width', '1')
+      rect.setAttribute('height', '26')
+      baseSvg.appendChild(rect)
+      break
+    }
+    case 'END':
+    case 'BRANCH': {
+      // For end, use <path fill-rule="evenodd" clip-rule="evenodd" d="M10 0V13H20V14H9V0H10Z"></path>
+      // For branch, use <path fill-rule="evenodd" clip-rule="evenodd" d="M10 0V13H20V14H10V26H9V0H10Z"></path>
+      const path = document.createElement('path')
+      path.setAttribute('fill-rule', 'evenodd')
+      path.setAttribute('clip-rule', 'evenodd')
+      if (type === 'END') {
+        path.setAttribute('d', 'M10 0V13H20V14H9V0H10Z')
+      } else if (type === 'BRANCH') {
+        path.setAttribute('d', 'M10 0V13H20V14H10V26H9V0H10Z')
+      }
+      baseSvg.appendChild(path)
+      break
+    }
+  }
+  TREE_ICONS[key] = baseSvg
+})
+
+export function getTreeIcon (type) {
   return TREE_ICONS[type].cloneNode(true)
 }
 
@@ -127,7 +180,7 @@ export function createRepoDiv (document, repoData) {
   // like: <a href="/19dev/flatdoc">flatdoc</a>
   const repoAnchor = document.createElement('a')
   repoAnchor.style.paddingRight = '4px'
-  repoAnchor.setAttribute('href', `/${forkName}`)
+  repoAnchor.setAttribute('href', `/${repoData.forkWithOwner}`)
   repoAnchor.innerText = repoData.name
 
   // Putting parts all together
