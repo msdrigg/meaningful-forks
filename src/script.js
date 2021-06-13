@@ -25,11 +25,16 @@
     loading.style.padding = "10px";
     loading.style.width = "max-content";
     loading.style.height = "calc(20px + 1.5em)"; // pad + line height
+    loading.style.bottom = "calc(10vh - 40px)";
+    loading.style.left = "0";
+    loading.style.right = "0";
     loading.style.zIndex = "9999";
     loading.style.position = "fixed";
-    loading.style.inset = "0";
-    loading.style.margin = "auto";
+    loading.style.margin = "0 auto";
     document.body.appendChild(loading);
+
+    // Make sure footer is always visible even if our loading icon obscures it
+    document.querySelector(".footer").style["margin-bottom"] = "5vh";
 
     const network = document.querySelector("#network");
 
