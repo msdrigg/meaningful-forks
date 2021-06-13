@@ -374,9 +374,12 @@
           }
         }
         if (fork.is_subfork) {
-          repoDocumentFragment.appendChild(
+          const subforkTextNode = document.createElement("span");
+          subforkTextNode.appendChild(
             document.createTextNode(` (subfork of ${fork.forked_from})`)
           );
+          subforkTextNode.style["margin-left"] = "8px";
+          repoDocumentFragment.appendChild(subforkTextNode);
         }
         repo.appendChild(repoDocumentFragment);
         network.firstElementChild.insertAdjacentElement("afterend", repo);
@@ -486,6 +489,7 @@
       svg.style["fill"] = "currentColor";
       svg.style["position"] = "relative";
       svg.style["bottom"] = "1px";
+      svg.style["margin-left"] = "8px";
 
       svg.classList.add("opticon", "opticon-" + type);
 
@@ -503,7 +507,6 @@
             "d",
             "M14 6l-4.9-0.64L7 1 4.9 5.36 0 6l3.6 3.26L2.67 14l4.33-2.33 4.33 2.33L10.4 9.26 14 6z"
           );
-          iconPath.setAttribute("fill", "black");
           break;
         case "up":
           title.appendChild(document.createTextNode("Number of commits ahead"));
