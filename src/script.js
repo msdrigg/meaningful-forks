@@ -1,14 +1,24 @@
 (async function () {
   // Using let instead of const so minify-es doesnt get too smart and move it away from the beginning
-  // NOTE: Do NOT release key with source
-  let accessToken = "ENTER_ACCESS_TOKEN_HERE";
-  // Number of forks to query
-  let apiForkQueryCount = 50;
+  /** @preserve NOTE: Do NOT release key with source
+   */
+  let ACCESS_TOKEN = "ENTER_ACCESS_TOKEN_HERE";
+
+  /** @preserve Number of forks to query
+   */
+  let FORK_LOAD_COUNT = 50;
+
+  /** @preserve Set to <2 for debug, <5 for Errors
+   */
   let DEBUG_LEVEL = 3;
+
+  /** @preserve Main function handle
+   */
+
   async function handleTransitions() {
     // Authorization header
     let headerObj = new Headers();
-    headerObj.append("Authorization", "token " + accessToken);
+    headerObj.append("Authorization", "token " + ACCESS_TOKEN);
     const auth = { headers: headerObj };
 
     // Show loading gif while sorting forks
@@ -49,8 +59,8 @@
       0,
       sourceRepoName.lastIndexOf("/")
     );
-    // like: https://api.github.com/repos/GhettoSanta/lovely-forks/forks?sort=stargazers&per_page=${apiForkQueryCount}
-    const forkApiUrl = `https://api.github.com/repos/${sourceRepoName}/forks?sort=stargazers&per_page=${apiForkQueryCount}`;
+    // like: https://api.github.com/repos/GhettoSanta/lovely-forks/forks?sort=stargazers&per_page=${FORK_LOAD_COUNT}
+    const forkApiUrl = `https://api.github.com/repos/${sourceRepoName}/forks?sort=stargazers&per_page=${FORK_LOAD_COUNT}`;
     if (DEBUG_LEVEL < 2) console.log("TCL: forkApiUrl", forkApiUrl);
     let main_forks = await fetch(forkApiUrl, auth)
       .then((response) => {
@@ -67,7 +77,7 @@
       })
       .catch((error) => {
         // this happens for unknown reasons on this particular repo, github either purposefully or accidentally doesn't allow it
-        // Access to fetch at 'https://api.github.com/repos/github/gitignore/forks?sort=stargazers&per_page=${apiForkQueryCount}' from origin 'https://github.com' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. If an opaque response serves your needs, set the request's mode to 'no-cors' to fetch the resource with CORS disabled.
+        // Access to fetch at 'https://api.github.com/repos/github/gitignore/forks?sort=stargazers&per_page=${FORK_LOAD_COUNT}' from origin 'https://github.com' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. If an opaque response serves your needs, set the request's mode to 'no-cors' to fetch the resource with CORS disabled.
         // Sending mode: 'no-cors' along with auth header leads to all requests failing with response.status as 0
         if (DEBUG_LEVEL < 5) console.log(error);
         loading.innerText =
@@ -89,7 +99,7 @@
           if (DEBUG_LEVEL < 2)
             console.log(`${fork.full_name} has ${fork.forks} subforks`);
           let subfork_data = await fetch(
-            fork.forks_url + `?sort=stargazers&per_page=${apiForkQueryCount}`,
+            fork.forks_url + `?sort=stargazers&per_page=${FORK_LOAD_COUNT}`,
             auth
           );
           let temp_sub_forks = await subfork_data.json();
