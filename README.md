@@ -11,7 +11,7 @@ Sort Github fork lists by the number of stars and commits ahead from the source 
 ## Installation
 1. If you don't already have an userscript manager, we suggest Tampermonkey. [[Chrome]](https://chrome.google.com/webstore/detail/dhdgffkkebhmkfjojejmpbldmpobfkfo) [[Firefox]](https://addons.mozilla.org/en-US/firefox/addon/tampermonkey/) [[Others]](https://www.tampermonkey.net/)
 1. Click here -> [[Install meaningful-forks]](https://github.com/aflowofcode/meaningful-forks/raw/master/dist/script.user.js)
-1. (optional) All keys are [rate limited](https://developer.github.com/v3/#rate-limiting). Get your own [Github API token](https://github.com/settings/tokens/new) with `public_repo` permission (or also for private repos, the `repo` permission).<br>Edit meaningful-forks locally (Tampermonkey > meaningful-forks > edit) and paste the key where you see `"Authorization","token <YOUR ACCESS TOKEN>"` and then save.
+1. (optional) All keys are [rate limited](https://developer.github.com/v3/#rate-limiting). Get your own [Github API token](https://github.com/settings/tokens/new) with `public_repo` permission (or also for private repos, the `repo` permission).<br>Edit meaningful-forks locally (Tampermonkey > meaningful-forks > edit) and paste the key where you see `ACCESS_TOKEN="ENTER_ACCESS_TOKEN_HERE` and then save.
 
 Now you can use meaningful-forks on any github page. To test this, go to the fork page for [Angular](https://github.com/angular/angular/network/members). Your page should look similar to the demo image above.
 
