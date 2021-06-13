@@ -3,7 +3,8 @@
   // NOTE: Do NOT release key with source
   let accessToken = "ENTER_ACCESS_TOKEN_HERE";
   // Number of forks to query
-  const apiForkQueryCount = 50;
+  let apiForkQueryCount = 50;
+  let DEBUG_LEVEL = 3;
   async function handleTransitions() {
     // Authorization header
     let headerObj = new Headers();
@@ -38,14 +39,14 @@
       .querySelectorAll(".repo")[0]
       .lastElementChild.getAttribute("href")
       .substring(1);
-    console.log("TCL: currentRepoUrl", sourceRepoName);
+    if (DEBUG_LEVEL < 2) console.log("TCL: currentRepoUrl", sourceRepoName);
     const sourceAuthorName = sourceRepoName.substring(
       0,
       sourceRepoName.lastIndexOf("/")
     );
     // like: https://api.github.com/repos/GhettoSanta/lovely-forks/forks?sort=stargazers&per_page=${apiForkQueryCount}
     const forkApiUrl = `https://api.github.com/repos/${sourceRepoName}/forks?sort=stargazers&per_page=${apiForkQueryCount}`;
-    console.log("TCL: forkApiUrl", forkApiUrl);
+    if (DEBUG_LEVEL < 2) console.log("TCL: forkApiUrl", forkApiUrl);
     let main_forks = await fetch(forkApiUrl, auth)
       .then((response) => {
         if (!response.ok) {
@@ -63,7 +64,7 @@
         // this happens for unknown reasons on this particular repo, github either purposefully or accidentally doesn't allow it
         // Access to fetch at 'https://api.github.com/repos/github/gitignore/forks?sort=stargazers&per_page=${apiForkQueryCount}' from origin 'https://github.com' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. If an opaque response serves your needs, set the request's mode to 'no-cors' to fetch the resource with CORS disabled.
         // Sending mode: 'no-cors' along with auth header leads to all requests failing with response.status as 0
-        console.log(error);
+        if (DEBUG_LEVEL < 5) console.log(error);
         loading.innerText =
           "Problem accessing API. If you've entered your personal access token & this always happens here, this repo probably doesn't allow API access 😕";
         setTimeout(() => {
@@ -72,7 +73,7 @@
       });
     let sub_forks = [],
       useless_sub_forks = [];
-    // console.log("TCL: forks", forks.filter(fork => fork.owner.type === "Organization"));
+    // if (DEBUG_LEVEL < 2) console.log("TCL: forks", forks.filter(fork => fork.owner.type === "Organization"));
 
     // subrepos (forks of forks) get out of order if not included in the ranking
     // aside from not displaying the amount of stars or commits which could be relevant
@@ -80,7 +81,8 @@
     await Promise.all(
       main_forks.map(async (fork) => {
         if (fork.forks > 0) {
-          console.log(`${fork.full_name} has ${fork.forks} subforks`);
+          if (DEBUG_LEVEL < 2)
+            console.log(`${fork.full_name} has ${fork.forks} subforks`);
           let subfork_data = await fetch(
             fork.forks_url + `?sort=stargazers&per_page=${apiForkQueryCount}`,
             auth
@@ -95,16 +97,17 @@
               sub_forks = sub_forks.concat(sf);
             } else {
               // TODO: remove these from the DOM or label them @ bottom
-              // console.log('irrelevant subfork', sf);
+              // if (DEBUG_LEVEL < 2) console.log('irrelevant subfork', sf);
               useless_sub_forks.push(sf);
             }
           });
         }
       })
     );
-    console.log(`Found ${sub_forks.length} relevant subforks`, sub_forks);
+    if (DEBUG_LEVEL < 2)
+      console.log(`Found ${sub_forks.length} relevant subforks`, sub_forks);
     let forks = main_forks.concat(sub_forks);
-    console.log("TCL: forks.length: " + forks.length);
+    if (DEBUG_LEVEL < 2) console.log("TCL: forks.length: " + forks.length);
     const stargazerCheckPromises = [];
     let bad_forks = [];
     loading.innerText = statusText02;
@@ -112,12 +115,13 @@
       forks.map(async (fork, index, forks) => {
         // like: mcanthony
         if (fork.owner === undefined) {
-          console.log("marking bad fork for delete", index, fork);
+          if (DEBUG_LEVEL < 2)
+            console.log("marking bad fork for delete", index, fork);
           bad_forks.push(index);
           return;
         }
         const authorName = fork["owner"]["login"];
-        console.log("TCL: authorName", authorName, index);
+        if (DEBUG_LEVEL < 2) console.log("TCL: authorName", authorName, index);
         if (authorName === "undefined") {
           return;
         } // skip
@@ -131,44 +135,48 @@
               throw new Error("Network response is not OK!");
             })
             .then((stargazers) => {
-              // console.log("TCL: stargazers", stargazers)
+              // if (DEBUG_LEVEL < 2) console.log("TCL: stargazers", stargazers)
               stargazers.forEach((stargazer) => {
                 if (
                   stargazer["login"] === authorName &&
                   forks[index]["stargazers_count"] > 0
                 ) {
-                  console.log(
-                    `TCL: starCount of ${authorName} before: ${forks[index]["stargazers_count"]}`
-                  );
+                  if (DEBUG_LEVEL < 2)
+                    console.log(
+                      `TCL: starCount of ${authorName} before: ${forks[index]["stargazers_count"]}`
+                    );
                   // do not count the author's star
                   forks[index]["stargazers_count"]--;
-                  console.log(
-                    `TCL: starCount of ${authorName} after: ${forks[index]["stargazers_count"]}`
-                  );
+                  if (DEBUG_LEVEL < 2)
+                    console.log(
+                      `TCL: starCount of ${authorName} after: ${forks[index]["stargazers_count"]}`
+                    );
                 }
               });
             })
             .catch(function (error) {
-              console.log(
-                "There has been a problem with your fetch operation: ",
-                error.message,
-                fork
-              );
+              if (DEBUG_LEVEL < 5)
+                console.log(
+                  "There has been a problem with your fetch operation: ",
+                  error.message,
+                  fork
+                );
             })
         );
       })
     );
-    console.log(
-      `found ${bad_forks.length} forks with bad data out of ${forks.length}`,
-      bad_forks
-    );
+    if (DEBUG_LEVEL < 2)
+      console.log(
+        `found ${bad_forks.length} forks with bad data out of ${forks.length}`,
+        bad_forks
+      );
     if (bad_forks.length > 0) {
       bad_forks = remove_bad_forks(bad_forks);
     }
 
     await Promise.all(stargazerCheckPromises);
     forks.sort(sortBy("stargazers_count", true, parseInt));
-    console.log("End of modifying stargazer count!");
+    if (DEBUG_LEVEL < 2) console.log("End of modifying stargazer count!");
     loading.innerText = statusText03;
     // Get default branch of parent repo (where the current fork is forked from)
     // like: https://api.github.com/repos/GhettoSanta/lovely-forks
@@ -191,29 +199,31 @@
           }
         );
       } catch (error) {
-        console.log(error);
+        if (DEBUG_LEVEL < 5) console.log(error);
       }
       // mark subforks that are not ahead by any commits for delete
-      // console.log(fork, fork.is_subfork, fork.ahead_by);
+      // if (DEBUG_LEVEL < 2) console.log(fork, fork.is_subfork, fork.ahead_by);
       if (fork.is_subfork && fork["ahead_by"] === 0) {
-        console.log(
-          "marking subfork ahead_by 0 for delete",
-          index,
-          fork.full_name
-        );
+        if (DEBUG_LEVEL < 2)
+          console.log(
+            "marking subfork ahead_by 0 for delete",
+            index,
+            fork.full_name
+          );
         bad_forks.push(index);
         return;
       }
     });
 
-    console.log(
-      `found ${bad_forks.length} subforks ahead_by 0 out of ${forks.length}`,
-      bad_forks
-    );
+    if (DEBUG_LEVEL < 2)
+      console.log(
+        `found ${bad_forks.length} subforks ahead_by 0 out of ${forks.length}`,
+        bad_forks
+      );
     if (bad_forks.length > 0) {
       bad_forks = remove_bad_forks(bad_forks);
     }
-    // console.log("TCL: forks", forks);
+    // if (DEBUG_LEVEL < 2) console.log("TCL: forks", forks);
     // this part appears to happen so fast the status doesn't get updated..
     loading.innerText = statusText04;
     forks.sort(
@@ -236,13 +246,13 @@
       )
     );
 
-    console.log("Beginning of DOM operations!");
+    if (DEBUG_LEVEL < 2) console.log("Beginning of DOM operations!");
     forks.reverse().forEach((fork) => {
-      console.log("TCL: fork", fork);
+      if (DEBUG_LEVEL < 2) console.log("TCL: fork", fork);
       // if (fork.owner.login === 'undefined') { return; }
       const forkName = fork["full_name"]; // like: mcanthony/lovely-forks
       const starCount = fork["stargazers_count"];
-      // console.log(forkName, starCount);
+      // if (DEBUG_LEVEL < 2) console.log(forkName, starCount);
       let hasRepo = false; // the repo is listed on the current page
       const repos = network.querySelectorAll("div.repo"),
         tree_svg = repos.length > 2 ? repos[1].querySelector("svg") : undefined;
@@ -251,11 +261,11 @@
         const href = repos[i].lastElementChild.getAttribute("href");
         if (href) {
           const repoName = href.substring(1);
-          // console.log(href, repoName, forkName, i);
+          // if (DEBUG_LEVEL < 2) console.log(href, repoName, forkName, i);
           if (repoName === forkName) {
             hasRepo = true;
             if (fork.hasOwnProperty("is_subfork") && fork.is_subfork) {
-              console.log("adding dagger to subfork");
+              if (DEBUG_LEVEL < 2) console.log("adding dagger to subfork");
               // the normal L won't make sense because subforks are ranked at the same level now
               const dagger = document.createTextNode("\u2021"),
                 svgs = repos[i].querySelectorAll("svg");
@@ -270,7 +280,7 @@
       // if api returned a user whose repo is not displayed on the current page
       // max seems to be 1000 displayed repos
       if (!hasRepo) {
-        console.log(`${forkName} repo wasn't showing`);
+        if (DEBUG_LEVEL < 2) console.log(`${forkName} repo wasn't showing`);
         // create repo display
         //<div class="repo">
         //  <img alt="" class="network-tree" src="https://github.githubassets.com/images/modules/network/t.png">
@@ -340,7 +350,7 @@
       }
 
       function addStatus(repo) {
-        console.log("adding status", repo);
+        if (DEBUG_LEVEL < 2) console.log("adding status", repo);
         const repoDocumentFragment = document.createDocumentFragment();
         repoDocumentFragment.appendChild(createIconSVG("star"));
         repoDocumentFragment.appendChild(
@@ -367,13 +377,14 @@
         network.firstElementChild.insertAdjacentElement("afterend", repo);
       }
       if (fork.hasOwnProperty("stargazers_count")) {
-        console.log("TCL: starCount", fork["stargazers_count"]);
+        if (DEBUG_LEVEL < 2)
+          console.log("TCL: starCount", fork["stargazers_count"]);
       }
     });
 
     // Finished sorting
     // remove loading gif
-    console.log("finished sorting");
+    if (DEBUG_LEVEL < 2) console.log("finished sorting");
     loading.remove();
 
     async function getFromApi(url, properties) {
@@ -525,13 +536,13 @@
 
     function remove_bad_forks(indexes) {
       for (let i = 0; i < indexes.length; i++) {
-        console.log("deleting:", forks[indexes[i]]);
+        if (DEBUG_LEVEL < 2) console.log("deleting:", forks[indexes[i]]);
         delete forks[indexes[i]];
       }
       forks = forks.filter((el) => {
         return el !== undefined;
       });
-      console.log(`${forks.length} remaining forks`);
+      if (DEBUG_LEVEL < 2) console.log(`${forks.length} remaining forks`);
       return [];
     }
   }
