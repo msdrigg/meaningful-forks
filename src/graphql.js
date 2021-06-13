@@ -3,6 +3,7 @@ import {
   InMemoryCache,
   gql
 } from '@apollo/client'
+import { BatchHttpLink } from '@apollo/client/link/batch-http'
 
 let globalToken = ''
 let globalClient = null
@@ -128,13 +129,16 @@ export function getClient (accessToken) {
   }
 
   if (globalToken !== accessToken || !globalClient) {
-    const client = new ApolloClient({
+    const batchedLink = BatchHttpLink({
       uri: 'https://api.github.com/graphql',
       cache: new InMemoryCache(),
       headers: {
-        authorization: `token ${accessToken}`
-      }
+        authorization: `bearer ${accessToken}`
+      },
+      batchMax: 10, // No more than 5 operations per batch
+      batchInterval: 20 // Wait no more than 20ms after first batched operation
     })
+    const client = new ApolloClient({ link: batchedLink })
     globalClient = client
     globalToken = accessToken
   }

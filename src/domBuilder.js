@@ -1,11 +1,11 @@
 
-export const SVG_ICON_TYPES = {
+export const STATUS_ICON_TYPES = {
   star: 'star',
   up: 'up',
   flame: 'flame'
 }
-// Based on: https://github.com/musically-ut/lovely-forks/blob/master/userscript/lovely-forks.user.js
-export function createIconSVG (type) {
+export const STATUS_ICONS = {}
+STATUS_ICON_TYPES.forEach((val, key) => {
   const svgNS = 'http://www.w3.org/2000/svg'
   const svg = document.createElementNS(svgNS, 'svg')
   svg.setAttribute('height', 12)
@@ -17,12 +17,12 @@ export function createIconSVG (type) {
   svg.style.bottom = '1px'
   svg.style['margin-left'] = '8px'
 
-  svg.classList.add('opticon', 'opticon-' + type)
+  svg.classList.add('opticon', 'opticon-' + val)
 
   const title = document.createElementNS(svgNS, 'title')
 
   const iconPath = document.createElementNS(svgNS, 'path')
-  switch (type) {
+  switch (val) {
     case 'star':
       title.appendChild(
         document.createTextNode(
@@ -56,10 +56,22 @@ export function createIconSVG (type) {
   iconPath.appendChild(title)
   svg.appendChild(iconPath)
 
-  return svg
+  STATUS_ICONS[key] = svg
+})
+
+function getStatusIcon (type) {
+  return STATUS_ICONS[type].cloneNode(true)
 }
 
-function createRepoDiv (document, repoData) {
+const TREE_ICON_TYPES = {
+
+}
+function getTreeIcon (type) {
+  return TREE_ICONS[type].cloneNode(true)
+}
+
+// Based on: https://github.com/musically-ut/lovely-forks/blob/master/userscript/lovely-forks.user.js
+export function createRepoDiv (document, repoData) {
   // create repo display
   // <div class="repo">
   //  <img alt="" class="network-tree" src="https://github.githubassets.com/images/modules/network/t.png">
@@ -119,7 +131,12 @@ function createRepoDiv (document, repoData) {
   repoAnchor.innerText = repoData.name
 
   // Putting parts all together
-  repoDiv.appendChild(treeSvg.cloneNode(true))
+  // Add tree icons
+  // TODO: Create these icons after sorting tree
+  repoData.svgIconsList.forEach((iconType) => {
+    repoDiv.appendChild(getTreeIcon(iconType))
+  })
+
   repoDiv.appendChild(gravatarAnchor)
   repoDiv.appendChild(nameAnchor)
   repoDiv.appendChild(document.createTextNode(' / '))
@@ -134,22 +151,20 @@ function addStatus (repoDiv, repoNode, DEBUG_LEVEL) {
   }
   if (DEBUG_LEVEL < 2) console.log('adding status', repoDiv)
   const iconsDocumentFragment = document.createDocumentFragment()
-  iconsDocumentFragment.appendChild(createIconSVG('star'))
+  iconsDocumentFragment.appendChild(getStatusIcon(STATUS_ICON_TYPES.star))
   iconsDocumentFragment.appendChild(
     document.createTextNode(`${repoNode.node.starCount} `)
   )
   if (repoNode.ahead_by !== undefined && repoNode.behind_by !== undefined) {
     if (repoNode.ahead_by > 0) {
-      const upIcon = createIconSVG('up')
-      iconsDocumentFragment.appendChild(upIcon)
+      iconsDocumentFragment.appendChild(getStatusIcon(STATUS_ICON_TYPES.up))
       iconsDocumentFragment.appendChild(
-        document.createTextNode(repoNode.ahead_by + ' ')
+        document.createTextNode(`${repoNode.ahead_by} `)
       )
     }
     if (repoNode.ahead_by - repoNode.behind_by > 0) {
-      iconsDocumentFragment.appendChild(createIconSVG('flame'))
+      iconsDocumentFragment.appendChild(getStatusIcon(STATUS_ICON_TYPES.flame))
     }
   }
   repoDiv.appendChild(iconsDocumentFragment)
-  network.firstElementChild.insertAdjacentElement('afterend', repoDiv)
 }
