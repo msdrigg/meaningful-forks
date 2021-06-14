@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<head>
+    <style>
+        #network>.repo {
+            color: green;
+            font-size: x-large;
+        }
+        :not(.old) #network .branch {
+            margin-left: 30px;
+        }
+        :not(.old) #network>.repo {
+            margin-left: 0;
+        }
+        :not(.old) #network>.branch,:not(.old) #network .branch {
+            border-left-style: solid;
+            border-width: 1px;
+            border-color: grey;
+        }
+        :not(.old) #network .branch {
+            font-size: large;
+        }
+        :not(.old) #network .branch>.branch {
+            font-size: medium;
+        }
+        :not(.old) #network .branch>.branch>.branch {
+            font-size: small;
+        }
+        :not(.old) #network .branch>.branch>.branch>.branch {
+            font-size: smaller;
+        }
+        :not(.old) #network .branch>.repo::before {
+            content: "-- ";
+        }
+        :not(.old) #network .branch:last-child>.repo::before{
+            content: "_ ";
+        }
+    </style>
+</head>
+<body>
+    <div class="top branch" id="network">
+        <div class="repo" id="repo-root">repo</div>
+        <div class="branch" id="branch-1">
+            <div class="repo" id="repo-main">repo</div>
+            <div class="branch" id="sub-repos">
+                <div class="repo" id="repo-1">repo</div>
+                <div class="branch" id="sub-sub-repos">
+                    <div class="repo" id="repo-1">repo</div>
+                </div>
+            </div>
+            <div class="branch" id="sub-repos">
+                <div class="repo" id="repo-2">repo</div>
+            </div>
+            <div class="branch" id="sub-repos">
+                <div class="repo" id="repo-3">repo</div>
+            </div>
+        </div>
+        <div class="branch" id="branch-2">
+            <div class="repo" id="repo-solo">repo</div>
+        </div>
+        <div class="branch" id="branch-3">
+            <div class="repo" id="repo-1">repo</div>
+            <div class="branch" id="sub-branch">
+                <div class="repo" id="repo-2">repo</div>
+            </div>
+        </div>
+        <div class="old" id="old">
+            <div class="repo" id="repo-4">old-repo</div>
+            <div class="repo" id="repo-4">old-repo</div>
+            <div class="repo" id="repo-4">old-repo</div>
+            <div class="repo" id="repo-4">old-repo</div>
+        </div>
+    </div>
+</body>

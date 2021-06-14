@@ -60,7 +60,7 @@ STATUS_ICON_TYPES.forEach((val, key) => {
   STATUS_ICONS[key] = svg
 })
 
-export function getStatusIcon (type) {
+export function getStatusIcon(type) {
   return STATUS_ICONS[type].cloneNode(true)
 }
 
@@ -118,12 +118,12 @@ TREE_ICON_TYPES.forEach((type, key) => {
   TREE_ICONS[key] = baseSvg
 })
 
-export function getTreeIcon (type) {
+export function getTreeIcon(type) {
   return TREE_ICONS[type].cloneNode(true)
 }
 
 // Based on: https://github.com/musically-ut/lovely-forks/blob/master/userscript/lovely-forks.user.js
-export function createRepoDiv (document, repoData) {
+export function createRepoDiv(document, repoData) {
   // create repo display
   // <div class="repo">
   //  <img alt="" class="network-tree" src="https://github.githubassets.com/images/modules/network/t.png">
@@ -197,7 +197,7 @@ export function createRepoDiv (document, repoData) {
   addStatus(repoDiv)
 }
 
-function addStatus (repoDiv, repoNode, DEBUG_LEVEL) {
+function addStatus(repoDiv, repoNode, DEBUG_LEVEL) {
   if (DEBUG_LEVEL === undefined) {
     DEBUG_LEVEL = 4
   }
@@ -221,7 +221,7 @@ function addStatus (repoDiv, repoNode, DEBUG_LEVEL) {
   repoDiv.appendChild(iconsDocumentFragment)
 }
 
-function buildLoading (document) {
+function buildLoading(document) {
   const loading = document.createElement('span')
   loading.style.background = '#22f922'
   loading.style.borderRadius = '10px'

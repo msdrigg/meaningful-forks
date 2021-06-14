@@ -1,4 +1,4 @@
-(async function () {
+;(async function () {
   // Using let instead of const so minify-es doesnt get too smart and move it away from the beginning
   /** @preserve NOTE: Do NOT release key with source
    */
@@ -15,7 +15,7 @@
   /** @preserve Main function handle
    */
 
-  async function handleTransitions () {
+  async function handleTransitions() {
     // Authorization header
     const headerObj = new Headers()
     headerObj.append('Authorization', 'token ' + ACCESS_TOKEN)
@@ -100,7 +100,9 @@
                   mainForksUserMap[userJson.full_name] = userJson
                 })
                 .catch((err) => {
-                  if (DEBUG_LEVEL < 5) { console.error('Error getting recently updated user: ') }
+                  if (DEBUG_LEVEL < 5) {
+                    console.error('Error getting recently updated user: ')
+                  }
                   if (DEBUG_LEVEL < 5) console.log(err)
                 })
             }
@@ -108,7 +110,9 @@
         )
       })
       .catch((err) => {
-        if (DEBUG_LEVEL < 5) { console.error('Error getting recently updated user: ') }
+        if (DEBUG_LEVEL < 5) {
+          console.error('Error getting recently updated user: ')
+        }
         if (DEBUG_LEVEL < 5) console.log(err)
       })
     let subForks = []
@@ -120,7 +124,9 @@
     await Promise.all(
       mainForks.map(async (fork) => {
         if (fork.forks > 0) {
-          if (DEBUG_LEVEL < 2) { console.log(`${fork.full_name} has ${fork.forks} subforks`) }
+          if (DEBUG_LEVEL < 2) {
+            console.log(`${fork.full_name} has ${fork.forks} subforks`)
+          }
           const subforkData = await fetch(
             fork.forks_url + `?sort=stargazers&per_page=${FORK_LOAD_COUNT}`,
             auth
@@ -144,7 +150,9 @@
         }
       })
     )
-    if (DEBUG_LEVEL < 2) { console.log(`Found ${subForks.length} relevant subforks`, subForks) }
+    if (DEBUG_LEVEL < 2) {
+      console.log(`Found ${subForks.length} relevant subforks`, subForks)
+    }
     let forks = mainForks.concat(subForks)
     if (DEBUG_LEVEL < 2) console.log('TCL: forks.length: ' + forks.length)
     const stargazerCheckPromises = []
@@ -154,7 +162,9 @@
       forks.map(async (fork, index, forks) => {
         // like: mcanthony
         if (fork.owner === undefined) {
-          if (DEBUG_LEVEL < 2) { console.log('marking bad fork for delete', index, fork) }
+          if (DEBUG_LEVEL < 2) {
+            console.log('marking bad fork for delete', index, fork)
+          }
           badForks.push(index)
           return
         }
@@ -298,7 +308,8 @@
       // if (DEBUG_LEVEL < 2) console.log(forkName, starCount);
       let hasRepo = false // the repo is listed on the current page
       const repos = network.querySelectorAll('div.repo')
-      const treeSvg = repos.length > 2 ? repos[1].querySelector('svg') : undefined
+      const treeSvg =
+        repos.length > 2 ? repos[1].querySelector('svg') : undefined
       for (let i = 0; i < repos.length; i++) {
         // like: mcanthony/lovely-forks, remove the first "/" in url by substring(1) in repoName
         const href = repos[i].lastElementChild.getAttribute('href')
@@ -325,14 +336,14 @@
       if (!hasRepo) {
         if (DEBUG_LEVEL < 2) console.log(`${forkName} repo wasn't showing`)
         let repoDiv = createRepoDiv(document, fork)
-      } 
-    }
+      }
+    })
     // Finished sorting
     // remove loading gif
     if (DEBUG_LEVEL < 2) console.log('finished sorting')
     loading.remove()
 
-    async function getFromApi (url, properties) {
+    async function getFromApi(url, properties) {
       const json = await fetch(url, auth).then((data) => data.json())
       // if (data.ok) {
       //   json = await data.json();
@@ -347,7 +358,7 @@
         })
       }
 
-      function processPropertyChain (json, property) {
+      function processPropertyChain(json, property) {
         if (property.indexOf('.') >= 0) {
           let result = json
           const propertyChain = property.split('.')
@@ -361,12 +372,12 @@
       }
     }
 
-    async function getDefaultBranch (repoName) {
+    async function getDefaultBranch(repoName) {
       const defaultBranchUrl = `https://api.github.com/repos/${repoName}`
       return getFromApi(defaultBranchUrl, 'default_branch')
     }
 
-    function removeBadForks (indexes) {
+    function removeBadForks(indexes) {
       for (let i = 0; i < indexes.length; i++) {
         if (DEBUG_LEVEL < 2) console.log('deleting:', forks[indexes[i]])
         delete forks[indexes[i]]
@@ -400,7 +411,7 @@
       found. It is passed a jNode to the matched
       element.
 */
-  async function waitForKeyElements (selectorTxt, actionFunction) {
+  async function waitForKeyElements(selectorTxt, actionFunction) {
     const targetNodes = document.querySelectorAll(selectorTxt)
 
     if (targetNodes && targetNodes.length > 0) {
