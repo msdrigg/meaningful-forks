@@ -1,4 +1,3 @@
-
 export const STATUS_ICON_TYPES = {
   star: 'star',
   up: 'up',
@@ -72,7 +71,7 @@ export const TREE_ICON_TYPES = {
   plain: 'PLAIN'
 }
 
-const TREE_ICONS = { }
+const TREE_ICONS = {}
 
 TREE_ICON_TYPES.forEach((type, key) => {
   // '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="26" viewBox="0 0 20 26"\
@@ -147,12 +146,12 @@ export function createRepoDiv (document, repoData) {
     const userId = repoData.owner.id
     nameAnchor.setAttribute(
       'data-hovercard-url',
-            `/hovercards?user_id=${userId}`
+      `/hovercards?user_id=${userId}`
     )
   } else if (ownerType === 'organization') {
     nameAnchor.setAttribute(
       'data-hovercard-url',
-            `/orgs/${ownerName}/hovercard`
+      `/orgs/${ownerName}/hovercard`
     )
     nameAnchor.setAttribute('href', `/${ownerName}`)
   }
@@ -220,4 +219,23 @@ function addStatus (repoDiv, repoNode, DEBUG_LEVEL) {
     }
   }
   repoDiv.appendChild(iconsDocumentFragment)
+}
+
+function buildLoading (document) {
+  const loading = document.createElement('span')
+  loading.style.background = '#22f922'
+  loading.style.borderRadius = '10px'
+  loading.style.color = 'black'
+  loading.style.fontWeight = 'bold'
+  loading.style.padding = '10px'
+  loading.style.width = 'max-content'
+  loading.style.height = 'calc(20px + 1.5em)' // pad + line height
+  loading.style.bottom = 'calc(10vh - 40px)'
+  loading.style.left = '0'
+  loading.style.right = '0'
+  loading.style.zIndex = '9999'
+  loading.style.position = 'fixed'
+  loading.style.margin = '0 auto'
+  document.body.appendChild(loading)
+  return loading
 }

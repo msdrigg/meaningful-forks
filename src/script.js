@@ -22,26 +22,12 @@
     const auth = { headers: headerObj }
 
     // Show loading gif while sorting forks
-    const loading = document.createElement('span')
     const statusText01 = '📊 Meaningful Forks is gathering data...'
     const statusText02 = '✨ Updating stars...'
     const statusText03 = '🍴 Sorting forks (might take a sec)...'
     const statusText04 = '🔀 Rearranging order...'
+    const loading = domBuilder.buildLoading(document)
     loading.innerText = statusText01
-    loading.style.background = '#22f922'
-    loading.style.borderRadius = '10px'
-    loading.style.color = 'black'
-    loading.style.fontWeight = 'bold'
-    loading.style.padding = '10px'
-    loading.style.width = 'max-content'
-    loading.style.height = 'calc(20px + 1.5em)' // pad + line height
-    loading.style.bottom = 'calc(10vh - 40px)'
-    loading.style.left = '0'
-    loading.style.right = '0'
-    loading.style.zIndex = '9999'
-    loading.style.position = 'fixed'
-    loading.style.margin = '0 auto'
-    document.body.appendChild(loading)
 
     // Make sure footer is always visible even if our loading icon obscures it
     document.querySelector('.footer').style['margin-bottom'] = '10vh'
