@@ -1,3 +1,29 @@
+function locationOf(element, array, comparer, start, end) {
+  if (array.length === 0) return -1
+
+  start = start || 0
+  end = end || array.length
+  var pivot = (start + end) >> 1 // should be faster than dividing by 2
+
+  var c = comparer(element, array[pivot])
+  if (end - start <= 1) return c == -1 ? pivot - 1 : pivot
+
+  switch (c) {
+    case -1:
+      return locationOf(element, array, comparer, start, pivot)
+    case 0:
+      return pivot
+    case 1:
+      return locationOf(element, array, comparer, pivot, end)
+  }
+}
+
+function insert(element, array) {
+  const location = locationOf(element, array) + 1
+  array.splice(location, 0, element)
+  return location
+}
+
 export function flattenRecursive(treeNode) {
   // Flattens the nodes in a depth first search
   let nodeList = []

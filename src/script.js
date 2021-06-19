@@ -153,7 +153,7 @@
     if (DEBUG_LEVEL < 2) {
       console.log(`Found ${subForks.length} relevant subforks`, subForks)
     }
-    let forks = mainForks.concat(subForks)
+    const forks = mainForks.concat(subForks)
     if (DEBUG_LEVEL < 2) console.log('TCL: forks.length: ' + forks.length)
     const stargazerCheckPromises = []
     let badForks = []
@@ -299,99 +299,10 @@
       )
     )
 
-    if (DEBUG_LEVEL < 2) console.log('Beginning of DOM operations!')
-    forks.reverse().forEach((fork) => {
-      if (DEBUG_LEVEL < 2) console.log('TCL: fork', fork)
-      // if (fork.owner.login === 'undefined') { return; }
-      const forkName = fork.full_name // like: mcanthony/lovely-forks
-      const starCount = fork.stargazers_count
-      // if (DEBUG_LEVEL < 2) console.log(forkName, starCount);
-      let hasRepo = false // the repo is listed on the current page
-      const repos = network.querySelectorAll('div.repo')
-      const treeSvg =
-        repos.length > 2 ? repos[1].querySelector('svg') : undefined
-      for (let i = 0; i < repos.length; i++) {
-        // like: mcanthony/lovely-forks, remove the first "/" in url by substring(1) in repoName
-        const href = repos[i].lastElementChild.getAttribute('href')
-        if (href) {
-          const repoName = href.substring(1)
-          // if (DEBUG_LEVEL < 2) console.log(href, repoName, forkName, i);
-          if (repoName === forkName) {
-            hasRepo = true
-            if ('is_subfork' in fork && fork.is_subfork) {
-              if (DEBUG_LEVEL < 2) console.log('adding dagger to subfork')
-              // the normal L won't make sense because subforks are ranked at the same level now
-              const dagger = document.createTextNode('\u2021')
-              const svgs = repos[i].querySelectorAll('svg')
-              if (treeSvg) svgs[0].replaceWith(treeSvg.cloneNode(true))
-              svgs[1].replaceWith(dagger)
-            }
-            addStatus(repos[i])
-            break // no need to keep searching after we found it
-          }
-        }
-      }
-      // if api returned a user whose repo is not displayed on the current page
-      // max seems to be 1000 displayed repos
-      if (!hasRepo) {
-        if (DEBUG_LEVEL < 2) console.log(`${forkName} repo wasn't showing`)
-        let repoDiv = createRepoDiv(document, fork)
-      }
-    })
-    // Finished sorting
-    // remove loading gif
-    if (DEBUG_LEVEL < 2) console.log('finished sorting')
-    loading.remove()
-
-    async function getFromApi(url, properties) {
-      const json = await fetch(url, auth).then((data) => data.json())
-      // if (data.ok) {
-      //   json = await data.json();
-      // } else {
-      //   throw new Error("Network response is not OK!");
-      // }
-      if (typeof properties === 'string') {
-        return processPropertyChain(json, properties)
-      } else if (Array.isArray(properties)) {
-        return properties.map((property) => {
-          return processPropertyChain(json, property)
-        })
-      }
-
-      function processPropertyChain(json, property) {
-        if (property.indexOf('.') >= 0) {
-          let result = json
-          const propertyChain = property.split('.')
-          propertyChain.forEach((property) => {
-            result = result[property]
-          })
-          return result
-        } else {
-          return json[property]
-        }
-      }
-    }
-
-    async function getDefaultBranch(repoName) {
-      const defaultBranchUrl = `https://api.github.com/repos/${repoName}`
-      return getFromApi(defaultBranchUrl, 'default_branch')
-    }
-
-    function removeBadForks(indexes) {
-      for (let i = 0; i < indexes.length; i++) {
-        if (DEBUG_LEVEL < 2) console.log('deleting:', forks[indexes[i]])
-        delete forks[indexes[i]]
-      }
-      forks = forks.filter((el) => {
-        return el !== undefined
-      })
-      if (DEBUG_LEVEL < 2) console.log(`${forks.length} remaining forks`)
-      return []
-    }
   }
-
-  // Taken from https://gist.github.com/mjblay/18d34d861e981b7785e407c3b443b99b
-  /* A utility function, for UserScripts, that detects
+})()
+// Taken from https://gist.github.com/mjblay/18d34d861e981b7785e407c3b443b99b
+/* A utility function, for UserScripts, that detects
     and handles AJAXed content.
 
     This is relevant to us because when navigating within a repository on github.com,
@@ -411,32 +322,31 @@
       found. It is passed a jNode to the matched
       element.
 */
-  async function waitForKeyElements(selectorTxt, actionFunction) {
-    const targetNodes = document.querySelectorAll(selectorTxt)
+async function waitForKeyElements(selectorTxt, actionFunction) {
+  const targetNodes = document.querySelectorAll(selectorTxt)
 
-    if (targetNodes && targetNodes.length > 0) {
-      /* --- Found target node(s).  Go through each and act if they
+  if (targetNodes && targetNodes.length > 0) {
+    /* --- Found target node(s).  Go through each and act if they
             are new.
         */
-      let runAction = false
-      targetNodes.forEach(function (element) {
-        if (element.dataset.found !== 'alreadyFound') {
-          element.dataset.found = 'alreadyFound'
-          runAction = true
-        }
-      })
-      if (runAction) {
-        actionFunction().finally(() => {
-          setTimeout(() => {
-            waitForKeyElements(selectorTxt, actionFunction)
-          }, 1000)
-        })
-        return
+    let runAction = false
+    targetNodes.forEach(function (element) {
+      if (element.dataset.found !== 'alreadyFound') {
+        element.dataset.found = 'alreadyFound'
+        runAction = true
       }
+    })
+    if (runAction) {
+      actionFunction().finally(() => {
+        setTimeout(() => {
+          waitForKeyElements(selectorTxt, actionFunction)
+        }, 1000)
+      })
+      return
     }
-    setTimeout(() => {
-      waitForKeyElements(selectorTxt, actionFunction)
-    }, 1000)
   }
-  await waitForKeyElements('#network>.repo', handleTransitions)
-})()
+  setTimeout(() => {
+    waitForKeyElements(selectorTxt, actionFunction)
+  }, 1000)
+}
+waitForKeyElements('#network>.repo', handleTransitions)
