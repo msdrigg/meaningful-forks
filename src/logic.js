@@ -4,6 +4,8 @@ import {
   getForks,
   getMainData
 } from 'apiBackend'
+import { meta } from 'eslint/lib/rules/*'
+import { introspectionFromSchema } from 'graphql'
 
 async function prefetchSource(username, repoName, auth) {
   return getSourceRepoFullName(username, repoName, auth)
@@ -21,6 +23,71 @@ async function prefetchReady(url, auth, client) {
   prefetchSource(username, reponame, auth).then((source) => {
     prefetchBody(source.owner, source.name, client)
   })
+}
+
+function getNewQueryNode(networkNode) {
+  return (queryNode = {
+    children: [],
+    metadata: {
+      starredEndCursor: undefined,
+      pulledAtEndCursor: undefined,
+      starCount: networkNode.starCount,
+      pulledAt: networkNode.pulledAt,
+      hasMoreStars: networkNode.forkCount > 0,
+      hasMoreRecent: networkNode.forkCount > 0
+    }
+  })
+}
+
+const QUERY_SORT_ORDERS = {
+  STARS: 'STARS',
+  RECENT: 'RECENT'
+}
+
+export function addToQueryTree(
+  queryTree,
+  queryMap,
+  networkNodes,
+  querySortOrder,
+  parentId
+) {
+  const { nodes, pageInfo } = newQuery.data.repository.forks
+  let parentNode
+  if (parentId === undefined) {
+    // Set parent to root of queryTree
+    parent = queryTree
+  } else {
+    parentNode = queryMap[parentId]
+  }
+
+  for (let newNode of networkNodes) {
+    if (!(newNode.id in queryMap)) {
+      parent.children[newNode.id] = getNewQueryNode(newNode)
+    }
+  }
+
+  let metadata = parent.metadata
+  if (querySortOrder === QUERY_SORT_ORDERS.STARS) {
+    let newLeastStars = nodes[nodes.length - 1].starCount
+    let parentLeastStars = metadata.leastStars
+      ? metadata.leastStars
+      : newLeastStars
+    if (parentLeastStars <= newLeastStars) {
+      metadata.leastStars = newLeastStars
+      parent.hasMoreStars = pageInfo.hasNextPage
+      parent.starredEndCursor = pageInfo.endCursor
+    }
+  } else if (querySortOrder === QUERY_SORT_ORDERS.RECENT) {
+    let newOldestTime = nodes[nodes.length - 1].pulledAt
+    let parentOldestTime = metadata.leastRecent
+      ? metadata.leastRecent
+      : newOldestTime
+    if (parentOldestTime <= newOldestTime) {
+      metadata.leastRecent = newOldestTime
+      parent.hasMoreRecent = pageInfo.hasNextPage
+      parent.pulledAtEndCursor = pageInfo.endCursor
+    }
+  }
 }
 
 export async function loadMoreNodes(
@@ -85,5 +152,10 @@ Parsing data: with each new dataset,
 2.b.ii For data nodes, insert using array.insertAt(index)
 2.c Also add dom/data nodes to domMap and dataMap (do this first)
 
-We use this complicated method so that conflicting diffs never have any trouble and dom updates as we get new data
+We use this complicated method so that repeated updates or and changes never have any trouble and dom updates as we get new data
+*/
+
+/*
+Checkout /repos/{owner}/{repo}/stats/{something} for interesting usage, could be relevent 
+Could use {participation} to see weekly commit activity
 */
